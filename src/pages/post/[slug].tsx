@@ -1,16 +1,21 @@
+/* eslint-disable react/no-danger */
 import { GetStaticPaths, GetStaticProps } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
+import Prismic from '@prismicio/client'
 import { format, parseISO } from 'date-fns'
 import pt from 'date-fns/locale/pt-BR'
 
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi'
 
+import { Fragment, useMemo } from 'react'
+import { RichText } from 'prismic-dom'
 import { getPrismicClient } from '../../services/prismic'
 
 import commonStyles from '../../styles/common.module.scss'
 import styles from './post.module.scss'
+import Header from '../../components/Header'
 
 interface Post {
   first_publication_date: string | null
@@ -34,11 +39,26 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps): JSX.Element {
-  console.log(post)
+  const readingMinutes = useMemo((): number => {
+    if (!post) return 0
+
+    const totalWords = post.data.content.reduce((acc, postTxt) => {
+      const totalWordsHeader = postTxt.heading.split(/\s/g).length
+
+      const bodyText = RichText.asText(postTxt.body)
+
+      const totalWordsBody = bodyText.split(/\s/g).length
+
+      return totalWordsHeader + totalWordsBody + acc
+    }, 0)
+
+    return Math.ceil(totalWords / 200)
+  }, [post])
+
   const router = useRouter()
 
   if (router.isFallback) {
-    return <div>Loading...</div>
+    return <div>Carregando...</div>
   }
 
   return (
@@ -46,6 +66,8 @@ export default function Post({ post }: PostProps): JSX.Element {
       <Head>
         <title>{post.data.title} | ignews</title>
       </Head>
+
+      <Header />
 
       <main className={`${styles.container}`}>
         <div className={styles.imageDiv}>
@@ -58,7 +80,9 @@ export default function Post({ post }: PostProps): JSX.Element {
             <div className={styles.postInfo}>
               <span>
                 <FiCalendar />
-                {post.first_publication_date}
+                {format(parseISO(post.first_publication_date), 'dd MMM yyyy', {
+                  locale: pt,
+                })}
               </span>
               <span>
                 <FiUser />
@@ -66,18 +90,20 @@ export default function Post({ post }: PostProps): JSX.Element {
               </span>
               <span>
                 <FiClock />
-                aiaiaiaiaiaaiaiaiaiaiaiaiaaiiaaiaiaiaiaa
+                {readingMinutes} min
               </span>
             </div>
 
             <div className={styles.postContent}>
               {post.data.content.map(content => (
-                <>
+                <Fragment key={content.heading}>
                   <h4>{content.heading}</h4>
-                  {content.body.map(body => (
-                    <p>{body.text}</p>
-                  ))}
-                </>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: RichText.asHtml(content.body),
+                    }}
+                  />
+                </Fragment>
               ))}
             </div>
           </article>
@@ -87,17 +113,22 @@ export default function Post({ post }: PostProps): JSX.Element {
   )
 }
 
-// export const getStaticPaths: GetStaticPaths = async () => {
-//   const prismic = getPrismicClient();
-//   const posts = await prismic.query(TODO);
-
-//   return
-
-//   // TODO
-// };
-
 export const getStaticPaths: GetStaticPaths = async () => {
-  return { paths: [], fallback: true }
+  const prismic = getPrismicClient()
+  const postsResponse = await prismic.query(
+    [Prismic.predicates.at('document.type', 'post')],
+    {
+      fetch: [''],
+      pageSize: 5,
+    }
+  )
+
+  const posts = postsResponse.results.map(post => ({ slug: post.uid }))
+
+  return {
+    paths: posts.map(post => ({ params: { slug: post.slug } })),
+    fallback: true,
+  }
 }
 
 export const getStaticProps: GetStaticProps = async context => {
@@ -107,27 +138,24 @@ export const getStaticProps: GetStaticProps = async context => {
   const response = await prismic.getByUID('post', String(slug), {})
 
   const post = {
-    first_publication_date: format(
-      parseISO(response.first_publication_date),
-      'dd MMM yyyy',
-      {
-        locale: pt,
-      }
-    ),
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
     data: {
       title: response.data.title,
+      subtitle: response.data.subtitle,
       banner: {
         url: response.data.banner.url,
       },
       author: response.data.author,
       content: response.data.content?.map(content => ({
         heading: content.heading,
-        body: content.body.map(body => ({ text: body.text })),
+        body: content.body,
       })),
     },
   }
 
   return {
     props: { post },
+    revalidate: 60 * 30, // 30 minutos
   }
 }

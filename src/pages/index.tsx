@@ -14,6 +14,7 @@ import { getPrismicClient } from '../services/prismic'
 
 import commonStyles from '../styles/common.module.scss'
 import styles from './home.module.scss'
+import Header from '../components/Header'
 
 interface Post {
   uid?: string
@@ -37,13 +38,7 @@ interface HomeProps {
 function convertPrismPosts(data: ApiSearchResponse): Post[] {
   const posts = data.results.map(post => ({
     uid: post.uid,
-    first_publication_date: format(
-      parseISO(post.first_publication_date),
-      'dd MMM yyyy',
-      {
-        locale: pt,
-      }
-    ),
+    first_publication_date: post.first_publication_date,
 
     data: {
       title: post.data.title,
@@ -79,6 +74,8 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
         <title>Home | SpaceTraveling</title>
       </Head>
 
+      <Header />
+
       <main className={`${commonStyles.content}`}>
         <div className={styles.posts}>
           {posts.map(post => (
@@ -89,7 +86,13 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
                 <span>
                   <time>
                     <FiCalendar />
-                    {post.first_publication_date}
+                    {format(
+                      parseISO(post.first_publication_date),
+                      'dd MMM yyyy',
+                      {
+                        locale: pt,
+                      }
+                    )}
                   </time>
 
                   <span>
@@ -138,5 +141,6 @@ export const getStaticProps: GetStaticProps = async () => {
 
   return {
     props: { postsPagination },
+    revalidate: 60 * 30, // 30 minutos
   }
 }
