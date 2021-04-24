@@ -21,6 +21,7 @@
       color: var(--gray-200);
       margin-top: 0.5rem;
       line-height: 1.125rem;
+      font-size: 1.125rem;
     }
 
     > span {
@@ -44,8 +45,23 @@
       }
     }
 
+    transition: color 0.2s;
+
     &:hover strong {
       color: var(--pink-500);
     }
+  }
+}
+
+.pagination {
+  color: var(--pink-500);
+  background: none;
+  border: 0;
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  transition: filter 0.2s;
+
+  &:hover {
+    filter: brightness(0.8);
   }
 }

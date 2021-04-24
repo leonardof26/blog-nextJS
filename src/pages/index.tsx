@@ -3,12 +3,13 @@ import Head from 'next/head'
 import Link from 'next/link'
 
 import Prismic from '@prismicio/client'
-import { RichText } from 'prismic-dom'
 import { format, parseISO } from 'date-fns'
 import pt from 'date-fns/locale/pt-BR'
 
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi'
 
+import { useState } from 'react'
+import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse'
 import { getPrismicClient } from '../services/prismic'
 
 import commonStyles from '../styles/common.module.scss'
@@ -33,8 +34,46 @@ interface HomeProps {
   postsPagination: PostPagination
 }
 
+function convertPrismPosts(data: ApiSearchResponse): Post[] {
+  const posts = data.results.map(post => ({
+    uid: post.uid,
+    first_publication_date: format(
+      parseISO(post.first_publication_date),
+      'dd MMM yyyy',
+      {
+        locale: pt,
+      }
+    ),
+
+    data: {
+      title: post.data.title,
+      subtitle: post.data.subtitle,
+
+      author: post.data.author,
+    },
+  }))
+
+  return posts
+}
+
 export default function Home({ postsPagination }: HomeProps): JSX.Element {
-  const { next_page: nextPage, results: posts } = postsPagination
+  const { next_page, results } = postsPagination
+
+  const [nextPage, setNextPage] = useState(next_page)
+  const [posts, setPosts] = useState(results)
+
+  console.log(postsPagination)
+
+  async function handleGetMorePosts(): Promise<void> {
+    const resp: ApiSearchResponse = await fetch(nextPage).then(response =>
+      response.json()
+    )
+
+    const newPostList = [...posts, ...convertPrismPosts(resp)]
+
+    setNextPage(resp.next_page)
+    setPosts(newPostList)
+  }
 
   return (
     <>
@@ -63,6 +102,15 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
               </a>
             </Link>
           ))}
+          {nextPage && (
+            <button
+              type="button"
+              className={styles.pagination}
+              onClick={handleGetMorePosts}
+            >
+              Carregar mais posts
+            </button>
+          )}
         </div>
       </main>
     </>
@@ -79,27 +127,11 @@ export const getStaticProps: GetStaticProps = async () => {
         'publication.subtitle',
         'publication.author',
       ],
-      pageSize: 100,
+      pageSize: 1,
     }
   )
 
-  const posts = postsResponse.results.map(post => ({
-    uid: post.uid,
-    first_publication_date: format(
-      parseISO(post.first_publication_date),
-      'dd MMM yyyy',
-      {
-        locale: pt,
-      }
-    ),
-
-    data: {
-      title: post.data.title,
-      subtitle: post.data.subtitle,
-
-      author: post.data.author,
-    },
-  }))
+  const posts = convertPrismPosts(postsResponse)
 
   const postsPagination = {
     next_page: postsResponse.next_page,
