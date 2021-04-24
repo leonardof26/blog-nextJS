@@ -1,1 +1,51 @@
-// TODO
+.posts {
+  margin: 0 auto;
+
+  a {
+    display: block;
+
+    & + a {
+      margin-top: 2.5rem;
+    }
+
+    strong {
+      display: block;
+      font-size: 1.75rem;
+      margin-top: 1rem;
+      line-height: 2rem;
+
+      transition: color 0.2s;
+    }
+
+    p {
+      color: var(--gray-200);
+      margin-top: 0.5rem;
+      line-height: 1.125rem;
+    }
+
+    > span {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      margin-top: 1rem;
+      color: var(--gray-200);
+      display: flex;
+
+      time {
+        display: flex;
+        align-items: center;
+        margin-right: 2rem;
+      }
+
+      time,
+      > span {
+        svg {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+
+    &:hover strong {
+      color: var(--pink-500);
+    }
+  }
+}

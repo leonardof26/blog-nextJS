@@ -1,4 +1,8 @@
 import { GetStaticProps } from 'next'
+import Head from 'next/head'
+import Link from 'next/link'
+
+import { FiCalendar, FiUser, FiClock } from 'react-icons/fi'
 
 import { getPrismicClient } from '../services/prismic'
 
@@ -25,7 +29,52 @@ interface HomeProps {
 }
 
 export default function Home(): JSX.Element {
-  return <h1>Home</h1>
+  return (
+    <>
+      <Head>
+        <title>Home | SpaceTraveling</title>
+      </Head>
+
+      <main className={`${commonStyles.content}`}>
+        <div className={styles.posts}>
+          <Link href="/">
+            <a>
+              <strong>Como Utilizar Hooks</strong>
+              <p>jnsadnjksadnjksan sjadnaskjd sjadsajd jasdnjksad</p>
+              <span>
+                <time>
+                  <FiCalendar />
+                  15 mar 2021
+                </time>
+
+                <span>
+                  <FiUser />
+                  Leonardo Fontes
+                </span>
+              </span>
+            </a>
+          </Link>
+          <Link href="/">
+            <a>
+              <strong>Como Utilizar Hooks</strong>
+              <p>jnsadnjksadnjksan sjadnaskjd sjadsajd jasdnjksad</p>
+              <span>
+                <time>
+                  <FiCalendar />
+                  15 mar 2021
+                </time>
+
+                <span>
+                  <FiUser />
+                  Leonardo Fontes
+                </span>
+              </span>
+            </a>
+          </Link>
+        </div>
+      </main>
+    </>
+  )
 }
 
 // export const getStaticProps = async () => {
