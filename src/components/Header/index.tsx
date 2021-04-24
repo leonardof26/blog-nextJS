@@ -7,7 +7,9 @@ export default function Header(): JSX.Element {
   return (
     <header className={`${styles.headerContainer} ${commonStyles.content}`}>
       <Link href="/">
-        <img src="/images/logo.svg" alt="logo" />
+        <a>
+          <img src="/images/logo.svg" alt="logo" />
+        </a>
       </Link>
     </header>
   )

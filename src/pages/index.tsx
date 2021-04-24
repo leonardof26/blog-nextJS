@@ -6,7 +6,7 @@ import Prismic from '@prismicio/client'
 import { format, parseISO } from 'date-fns'
 import pt from 'date-fns/locale/pt-BR'
 
-import { FiCalendar, FiUser, FiClock } from 'react-icons/fi'
+import { FiCalendar, FiUser } from 'react-icons/fi'
 
 import { useState } from 'react'
 import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse'
@@ -62,8 +62,6 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
   const [nextPage, setNextPage] = useState(next_page)
   const [posts, setPosts] = useState(results)
 
-  console.log(postsPagination)
-
   async function handleGetMorePosts(): Promise<void> {
     const resp: ApiSearchResponse = await fetch(nextPage).then(response =>
       response.json()
@@ -84,7 +82,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
       <main className={`${commonStyles.content}`}>
         <div className={styles.posts}>
           {posts.map(post => (
-            <Link href="/" key={post.uid}>
+            <Link href={`post/${post.uid}`} key={post.uid}>
               <a>
                 <strong>{post.data.title}</strong>
                 <p>{post.data.subtitle}</p>
